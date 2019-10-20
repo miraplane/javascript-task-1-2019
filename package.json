@@ -1,13 +1,20 @@
 {
   "private": true,
-  "main": "phone-book.js",
+  "main": "pbql.js",
   "scripts": {
+    "deps": "npm ci",
     "lint": "eslint .",
     "test": "npm run lint && mocha --exit *.spec.js"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run test"
+    }
+  },
   "dependencies": {
     "eslint": "6.5.1",
-    "eslint-config-hrundel": "1.4.0",
-    "mocha": "6.2.1"
+    "eslint-config-hrundel": "latest",
+    "husky": "3.0.9",
+    "mocha": "6.2.2"
   }
 }
