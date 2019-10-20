@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "main": "phone-book.js",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "npm run lint && mocha --exit *.spec.js"
+  },
+  "dependencies": {
+    "eslint": "6.5.1",
+    "eslint-config-hrundel": "1.4.0",
+    "mocha": "6.2.1"
+  }
+}
