@@ -315,7 +315,25 @@ function splitCommand(command) {
 
 }
 
+function checkCommands(query) {
+    let words = query.split(' ');
+    let index = 1;
+    let count = 0;
+    for (let word of words) {
+        if (word.indexOf(';') === word.lastIndexOf(';') && word.indexOf(';') !== -1) {
+            count = word.length - word.indexOf(';');
+            index += 1;
+            continue;
+        }
+        if ((word.match(/;/g) || []).length > 1) {
+            syntaxError(index, count + 1);
+        }
+        count += word.length + 1;
+    }
+}
+
 function run(query) {
+    checkCommands(query);
     let answers = [];
     let queries = query.split(';');
     checkEndCommands(queries);
