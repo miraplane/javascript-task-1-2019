@@ -30,7 +30,7 @@ const phoneBook = new Map();
 const commands = [
     { word: [/^Создай$/,
         /^контакт$/,
-        /^[А-Яа-я_]+$/],
+        /^[А-Яа-я_ ]+$/],
     prev: [[-1], [0], [1]],
     run: createContact,
     insertInformation: function (word) {
@@ -39,7 +39,7 @@ const commands = [
 
     { word: [/^Удали$/,
         /^контакт$/,
-        /^[А-Яа-я_]+$/],
+        /^[А-Яа-я_ ]+$/],
     prev: [[-1], [0], [1]],
     run: deleteContact,
     insertInformation: function (word) {
@@ -53,7 +53,7 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[А-Яа-я_]+$/,
+        /^[А-Яа-я_ ]+$/,
         /[A-Za-zА-Яа-я0-9_.@]+/],
     prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
     run: addInformationToContact,
@@ -70,7 +70,7 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[А-Яа-я_]+$/,
+        /^[А-Яа-я_ ]+$/,
         /[A-Za-zА-Яа-я0-9_.@]+/],
     prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
     run: deleteInformationFromContact,
@@ -293,16 +293,25 @@ function defineCommand(word) {
     return { command: null, exeption };
 }
 
-function splitCommand(command) {
-    let indexQuery = command.indexOf('есть');
+function splitWithKW(command, keyWord) {
+    let indexQuery = command.indexOf(keyWord);
     let query = [];
     if (indexQuery !== -1) {
-        indexQuery += 'есть'.length + 1;
+        indexQuery += keyWord.length;
         query.push(command.slice(indexQuery));
         command = command.slice(0, indexQuery - 1);
+
+        return command.split(' ')
+            .concat(query);
     }
 
-    return command.split(' ').concat(query);
+    return [];
+}
+
+function splitCommand(command) {
+    return splitWithKW(command, ' есть ')
+        .concat(splitWithKW(command, ' контакт '))
+        .concat(splitWithKW(command, ' контакта '));
 
 }
 
