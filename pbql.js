@@ -1,24 +1,118 @@
 'use strict';
 
-/**
- * Телефонная книга
- */
-const phoneBook = new Map();
+function findCommand(command, word, prev) {
+    let find = false;
+    for (let i = 0; i < command.word.length; i++) {
+        if (command.word[i].test(word) && command.prev[i].includes(prev.index)) {
+            find = true;
+            prev.index = i;
+            break;
+        }
+    }
 
-/**
- * Вызывайте эту функцию, если есть синтаксическая ошибка в запросе
- * @param {number} lineNumber – номер строки с ошибкой
- * @param {number} charNumber – номер символа, с которого запрос стал ошибочным
- */
+    return find;
+}
+
+function isThisCommand(command, words) {
+    let index = 0;
+    let prev = { index: -1 };
+    for (let j = 0; j < words.length; j++) {
+        if (! findCommand(command, words[j], prev)) {
+            return index + 1;
+        }
+        index += words[j].length + 1;
+    }
+
+    return 0;
+}
+
+const phoneBook = new Map();
+const commands = [
+    { word: [/^Создай$/,
+        /^контакт$/,
+        /^[А-Яа-я_]+$/],
+    prev: [[-1], [0], [1]],
+    run: createContact,
+    insertInformation: function (word) {
+        return { name: extractData(word, 'контакт').join('') };
+    } },
+
+    { word: [/^Удали$/,
+        /^контакт$/,
+        /^[А-Яа-я_]+$/],
+    prev: [[-1], [0], [1]],
+    run: deleteContact,
+    insertInformation: function (word) {
+        return { name: extractData(word, 'контакт').join('') };
+    } },
+
+    { word: [/^Добавь$/,
+        /^телефон$/,
+        /^\d{10}$/,
+        /^и$/,
+        /^почту$/,
+        /^для$/,
+        /^контакта$/,
+        /^[А-Яа-я_]+$/,
+        /[A-Za-zА-Яа-я0-9_.@]+/],
+    prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
+    run: addInformationToContact,
+    insertInformation: function (word) {
+        return { name: extractData(word, 'контакта').join(''),
+            phone: extractData(word, 'телефон'),
+            email: extractData(word, 'почту') };
+    } },
+
+    { word: [/^Удали$/,
+        /^телефон$/,
+        /^\d{10}$/,
+        /^и$/,
+        /^почту$/,
+        /^для$/,
+        /^контакта$/,
+        /^[А-Яа-я_]+$/,
+        /[A-Za-zА-Яа-я0-9_.@]+/],
+    prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
+    run: deleteInformationFromContact,
+    insertInformation: function (word) {
+        return { name: extractData(word, 'контакта').join(''),
+            phone: extractData(word, 'телефон'),
+            email: extractData(word, 'почту') };
+    } },
+
+    { word: [/^Покажи$/,
+        /^почты$/,
+        /^телефоны$/,
+        /^имя$/,
+        /^и$/,
+        /^для$/,
+        /^контактов,$/,
+        /^где$/,
+        /^есть$/,
+        /^[A-Za-zА-Яа-я0-9_.@ ]*$/],
+    prev: [[-1], [0, 4], [0, 4], [0, 4], [1, 2, 3], [1, 2, 3], [5], [6], [7], [8]],
+    run: queryProcessing,
+    insertInformation: function (word) {
+        return { query: extractData(word, 'есть').join('') };
+    } },
+
+    { word: [/^Удали$/,
+        /^контакты,$/,
+        /^где$/,
+        /^есть$/,
+        /^[A-Za-zА-Яа-я0-9_.@ ]*$/],
+    prev: [[-1], [0], [1], [2], [3]],
+    run: deleteContactWithQuery,
+    insertInformation: function (word) {
+        return { query: extractData(word, 'есть').join('') };
+    } }];
+
 function syntaxError(lineNumber, charNumber) {
     throw new Error(`SyntaxError: Unexpected token at ${lineNumber}:${charNumber}`);
 }
 
-/**
- * Создает новый контакт
- * @param {string} name
- */
-function createContact(name) {
+function createContact(query, inf) {
+    let name = inf.name;
     if (phoneBook.has(name)) {
         return;
     }
@@ -28,14 +122,14 @@ function createContact(name) {
         phoneNumber: [],
         email: [],
 
-        includes: function (query) {
+        includes: function (myQuery) {
             let isSuit = false;
-            isSuit = isSuit || contact.name.includes(query);
+            isSuit = isSuit || contact.name.includes(myQuery);
             for (let phone of contact.phoneNumber) {
-                isSuit = isSuit || phone.includes(query);
+                isSuit = isSuit || phone.includes(myQuery);
             }
             for (let email of contact.email) {
-                isSuit = isSuit || email.includes(query);
+                isSuit = isSuit || email.includes(myQuery);
             }
 
             return isSuit;
@@ -68,21 +162,13 @@ function createContact(name) {
     phoneBook.set(name, contact);
 }
 
-/**
- * Удаляет уже существующий контакт
- * @param {string} name
- */
-function deleteContact(name) {
+function deleteContact(query, inf) {
+    let name = inf.name;
     if (phoneBook.has(name)) {
         phoneBook.delete(name);
     }
 }
 
-/**
- * Добавляет в массив array только новые значения из elements
- * @param {array} array
- * @param {array} elements
- */
 function addUnique(array, elements) {
     for (let i = 0; i < elements.length; i++) {
         if (elements[i] in array) {
@@ -92,27 +178,16 @@ function addUnique(array, elements) {
     }
 }
 
-/**
- * Добавляет телефоны phone и почты email в контакт name
- * @param {string} name
- * @param {array} phone
- * @param {array} email
- */
-function addInformationsToContact(name, phone, email) {
-    if (!phoneBook.has(name)) {
+function addInformationToContact(query, inf) {
+    if (!phoneBook.has(inf.name)) {
         return;
     }
 
-    let contact = phoneBook.get(name);
-    addUnique(contact.phoneNumber, phone);
-    addUnique(contact.email, email);
+    let contact = phoneBook.get(inf.name);
+    addUnique(contact.phoneNumber, inf.phone);
+    addUnique(contact.email, inf.email);
 }
 
-/**
- * Удаляет элементы elements из массива array
- * @param {array} array
- * @param {string} elements
- */
 function deleteElements(array, elements) {
     for (let i = 0; i < elements.length; i++) {
         if (array.includes(elements[i])) {
@@ -122,27 +197,16 @@ function deleteElements(array, elements) {
     }
 }
 
-/**
- * Удаляет телефоны phone и почты email у контакта name
- * @param {string} name
- * @param {array} phone
- * @param {array} email
- */
-function deleteInformationsFromContact(name, phone, email) {
-    if (!phoneBook.has(name)) {
+function deleteInformationFromContact(query, inf) {
+    if (!phoneBook.has(inf.name)) {
         return;
     }
-    let contact = phoneBook.get(name);
-    deleteElements(contact.phoneNumber, phone);
-    deleteElements(contact.email, email);
+    let contact = phoneBook.get(inf.name);
+    deleteElements(contact.phoneNumber, inf.phone);
+    deleteElements(contact.email, inf.email);
 
 }
 
-/**
- * Находит контакт в телефон, почту или имя которого входит подстрока query
- * @param {string} query
- * @returns {Array}
- */
 function findContact(query) {
     if (query === '') {
         return [];
@@ -158,29 +222,11 @@ function findContact(query) {
     return result;
 }
 
-/**
- * Удаляет контакт в телефоне, почте или имени которого содержится query
- * @param {string} query
- */
-function deleteContactWithQuery(query) {
-    let contacts = findContact(query);
+function deleteContactWithQuery(query, inf) {
+    let contacts = findContact(inf.query);
     for (let contact of contacts) {
         phoneBook.delete(contact.name);
     }
-}
-
-function indexesOf(word, subword) {
-    let indexes = [];
-    let count = 0;
-    let index = word.indexOf(subword);
-    while (index !== -1) {
-        indexes.push(index + count);
-        count = count + index + 1;
-        word = word.slice(index + 1);
-        index = word.indexOf(subword);
-    }
-
-    return indexes;
 }
 
 function indexesOfArray(array, element) {
@@ -200,143 +246,79 @@ function checkEndCommands(queries) {
     }
 }
 
-function checkEndCommand(i, query) {
-    let mark = /[0-9А-Яа-я_]+(Создай|Удали|Покажи|Добавь)/i.exec(query);
-    if (mark) {
-        syntaxError(i + 1,
-            mark.index + /(Создай|Удали|Покажи|Добавь)/i.exec(mark[0]).index + 1);
+function extractData(words, keyWord) {
+    let data = [];
+    let indexesData = indexesOfArray(words, keyWord);
+    for (let index of indexesData) {
+        data.push(words[index + 1]);
     }
+
+    return data;
 }
 
-function checkRegister(i, query) {
-    if (! /^[А-Я]/.test(query)) {
-        syntaxError(i + 1, 1);
-    }
-}
-
-function checkSpace(i, query) {
-    if (query.indexOf('  ') !== -1 && query.indexOf('  ') < query.indexOf('есть')) {
-        syntaxError(i + 1, query.indexOf('  ') + 2);
-    }
-}
-
-function checkData(i, query, field, format) {
-    let words = query.split(' ');
-    let indexesOfArr = indexesOfArray(words, field);
-    let indexesOfStr = indexesOf(query, field);
-    for (let j = 0; j < indexesOfArr.length; j++) {
-        if (! format.test(words[indexesOfArr[j] + (field === 'телефон' ? 1 : 2)])) {
-            syntaxError(i + 1, indexesOfStr[j] + 1 + field.length + 1);
-        }
-    }
-}
-
-function checkSyntax(queries) {
-    checkEndCommands(queries);
-
-    for (let i = 0; i < queries.length - 1; i++) {
-        let query = queries[i];
-
-        checkRegister(i, query);
-        checkEndCommand(i, query);
-        checkSpace(i, query);
-        checkData(i, query, 'телефон', /^\d{10}$/);
-        checkData(i, query, 'почту', /^(и|для)$/);
-    }
-
-}
-
-function insertInformation(words) {
-    let phone = [];
-    let email = [];
-    let indexesPhone = indexesOfArray(words, 'телефон');
-    for (let index of indexesPhone) {
-        phone.push(words[index + 1]);
-    }
-    let indexesEmail = indexesOfArray(words, 'почту');
-    for (let index of indexesEmail) {
-        email.push(words[index + 1]);
-    }
-
-    return { phone, email };
-}
-
-function queryProcessing(query, answer) {
-    let argIndex = query.indexOf('есть ') + 'есть '.length;
-    let arg = query.slice(argIndex);
-    let contacts = findContact(arg);
+function queryProcessing(query, inf) {
+    let contacts = findContact(inf.query);
     let fields = (query.slice(7, query.indexOf(' для'))).split(' и ');
+    let answer = [];
 
     for (let contact of contacts) {
         answer.push(contact.toString(fields));
     }
+
+    return answer;
 }
 
-function deleteWithQuery(command) {
-    let argIndex = command.indexOf('есть ') + 1 + 'есть '.length;
-    let arg = command.slice(argIndex);
-    deleteContactWithQuery(arg);
-}
+function runCommand(command, words, answer) {
+    let inf = command.insertInformation(words);
 
-function changeContact(command, name) {
-    if (command === 'Создай') {
-        createContact(name);
-    } else {
-        deleteContact(name);
+    let ans = command.run(words.join(' '), inf);
+    if (ans) {
+        answer.push(...ans);
     }
 }
 
-function runCommand(command, answer) {
-    let words = command.split(' ');
-    let name = words[words.length - 1];
-    let inf = insertInformation(words);
-    switch (true) {
-        case /^(Создай|Удали) контакт [А-Яа-я_]+/.test(command): {
-            changeContact(words[0], name);
-
-            return true;
+function defineCommand(word) {
+    let exeption = 0;
+    for (let command of commands) {
+        let ex = isThisCommand(command, word);
+        if (ex !== 0) {
+            exeption = Math.max(exeption, ex);
+            continue;
         }
-        case /^Добавь (телефон|почту)/.test(command): {
-            addInformationsToContact(name, inf.phone, inf.email);
+        exeption = 0;
 
-            return true;
-
-        }
-        case /Удали (телефон|почту)/.test(command): {
-            deleteInformationsFromContact(name, inf.phone, inf.email);
-
-            return true;
-        }
-        case /^Покажи/.test(command): {
-            queryProcessing(command, answer);
-
-            return true;
-        }
-        case /^Удали контакты/.test(command): {
-            deleteWithQuery(command);
-
-            return true;
-        }
-        default: {
-
-            return false;
-        }
+        return { command, exeption };
     }
+
+    return { command: null, exeption };
 }
 
-/**
- * Выполнение запроса на языке pbQL
- * @param {string} query
- * @returns {string[]} - строки с результатами запроса
- */
+function splitCommand(command) {
+    let indexQuery = command.indexOf('есть');
+    let query = [];
+    if (indexQuery !== -1) {
+        indexQuery += 'есть'.length + 1;
+        query.push(command.slice(indexQuery));
+        command = command.slice(0, indexQuery - 1);
+    }
+
+    return command.split(' ').concat(query);
+
+}
+
 function run(query) {
     let answers = [];
-
     let queries = query.split(';');
-    checkSyntax(queries);
+    checkEndCommands(queries);
     for (let i = 0; i < queries.length - 1; i++) {
-        if (! runCommand(queries[i], answers)) {
-            syntaxError(i + 1, 1);
+        let word = splitCommand(queries[i]);
+
+        let define = defineCommand(word);
+        if (define.command) {
+            runCommand(define.command, word, answers);
+        }
+        if (define.exeption !== 0) {
+            syntaxError(i + 1, define.exeption);
         }
     }
 
