@@ -30,7 +30,7 @@ const phoneBook = new Map();
 const commands = [
     { word: [/^Создай$/,
         /^контакт$/,
-        /^[А-Яа-я_ ]+$/],
+        /^[^;]+$/],
     prev: [[-1], [0], [1]],
     run: createContact,
     insertInformation: function (word) {
@@ -39,7 +39,7 @@ const commands = [
 
     { word: [/^Удали$/,
         /^контакт$/,
-        /^[А-Яа-я_ ]+$/],
+        /^[^;]+$/],
     prev: [[-1], [0], [1]],
     run: deleteContact,
     insertInformation: function (word) {
@@ -53,8 +53,8 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[А-Яа-я_ ]+$/,
-        /[A-Za-zА-Яа-я0-9_.@]+/],
+        /^[^;]+$/,
+        /^[^;]+$/],
     prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
     run: addInformationToContact,
     insertInformation: function (word) {
@@ -70,8 +70,8 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[А-Яа-я_ ]+$/,
-        /[A-Za-zА-Яа-я0-9_.@]+/],
+        /^[^;]+$/,
+        /^[^;]+$/],
     prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
     run: deleteInformationFromContact,
     insertInformation: function (word) {
@@ -89,7 +89,7 @@ const commands = [
         /^контактов,$/,
         /^где$/,
         /^есть$/,
-        /^[A-Za-zА-Яа-я0-9_.@, ]*$/],
+        /^[^;]*$/],
     prev: [[-1], [0, 4], [0, 4], [0, 4], [1, 2, 3], [1, 2, 3], [5], [6], [7], [8]],
     run: queryProcessing,
     insertInformation: function (word) {
@@ -100,7 +100,7 @@ const commands = [
         /^контакты,$/,
         /^где$/,
         /^есть$/,
-        /^[A-Za-zА-Яа-я0-9_.@, ]*$/],
+        /^[^;]*$/],
     prev: [[-1], [0], [1], [2], [3]],
     run: deleteContactWithQuery,
     insertInformation: function (word) {
