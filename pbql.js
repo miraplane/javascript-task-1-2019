@@ -53,9 +53,8 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[^;]+$/,
         /^[^;]+$/],
-    prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
+    prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [2, 7], [5], [4, 6]],
     run: addInformationToContact,
     insertInformation: function (word) {
         return { name: extractData(word, 'контакта').join(''),
@@ -70,9 +69,8 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[^;]+$/,
         /^[^;]+$/],
-    prev: [[-1], [0, 3], [1], [2, 8], [0, 3], [2, 8], [5], [6], [4]],
+    prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [2, 7], [5], [4, 6]],
     run: deleteInformationFromContact,
     insertInformation: function (word) {
         return { name: extractData(word, 'контакта').join(''),
@@ -171,7 +169,7 @@ function deleteContact(query, inf) {
 
 function addUnique(array, elements) {
     for (let i = 0; i < elements.length; i++) {
-        if (elements[i] in array) {
+        if (array.includes(elements[i])) {
             continue;
         }
         array.push(elements[i]);
