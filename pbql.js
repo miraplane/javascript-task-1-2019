@@ -315,6 +315,15 @@ function splitCommand(command) {
         .concat(query);
 }
 
+function checkComma(query, define) {
+    if (define.exception - 1 === query.indexOf('контактов ')) {
+        define.exception += 'контактов'.length;
+    }
+    if (define.exception - 1 === query.indexOf('контакты ')) {
+        define.exception += 'контакты'.length;
+    }
+}
+
 function run(query) {
     let answers = [];
     let queries = query.split(';');
@@ -328,6 +337,7 @@ function run(query) {
             runCommand(define.command, word, answers);
         }
         if (define.exception !== 0) {
+            checkComma(queries[i], define);
             syntaxError(i + 1, define.exception);
         }
     }
