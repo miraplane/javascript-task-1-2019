@@ -278,62 +278,46 @@ function runCommand(command, words, answer) {
 }
 
 function defineCommand(word) {
-    let exeption = 0;
+    let exception = 0;
     for (let command of commands) {
         let ex = isThisCommand(command, word);
         if (ex !== 0) {
-            exeption = Math.max(exeption, ex);
+            exception = Math.max(exception, ex);
             continue;
         }
-        exeption = 0;
+        exception = 0;
 
-        return { command, exeption };
+        return { command, exception };
     }
 
-    return { command: null, exeption };
+    return { command: null, exception };
 }
 
-function splitWithKW(command, keyWord) {
+function findKeyWord(command, keyWord) {
     let indexQuery = command.indexOf(keyWord);
-    let query = [];
     if (indexQuery !== -1) {
         indexQuery += keyWord.length;
-        query.push(command.slice(indexQuery));
-        command = command.slice(0, indexQuery - 1);
 
-        return command.split(' ')
-            .concat(query);
+        return indexQuery;
     }
 
-    return [];
+    return Number.MAX_VALUE;
 }
 
 function splitCommand(command) {
-    return splitWithKW(command, ' есть ')
-        .concat(splitWithKW(command, ' контакт '))
-        .concat(splitWithKW(command, ' контакта '));
+    let index = Math.min(findKeyWord(command, ' есть '),
+        findKeyWord(command, ' контакт '),
+        findKeyWord(command, ' контакта '));
 
-}
 
-function checkCommands(query) {
-    let words = query.split(' ');
-    let index = 1;
-    let count = 0;
-    for (let word of words) {
-        if (word.indexOf(';') === word.lastIndexOf(';') && word.indexOf(';') !== -1) {
-            count = word.length - word.indexOf(';');
-            index += 1;
-            continue;
-        }
-        if ((word.match(/;/g) || []).length > 1) {
-            syntaxError(index, count + 1);
-        }
-        count += word.length + 1;
-    }
+    let query = (command.slice(index));
+    command = command.slice(0, index - 1);
+
+    return command.split(' ')
+        .concat(query);
 }
 
 function run(query) {
-    checkCommands(query);
     let answers = [];
     let queries = query.split(';');
     checkEndCommands(queries);
@@ -344,8 +328,8 @@ function run(query) {
         if (define.command) {
             runCommand(define.command, word, answers);
         }
-        if (define.exeption !== 0) {
-            syntaxError(i + 1, define.exeption);
+        if (define.exception !== 0) {
+            syntaxError(i + 1, define.exception);
         }
     }
 
