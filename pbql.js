@@ -89,7 +89,7 @@ const commands = [
         /^контактов,$/,
         /^где$/,
         /^есть$/,
-        /^[A-Za-zА-Яа-я0-9_.@ ]*$/],
+        /^[A-Za-zА-Яа-я0-9_.@, ]*$/],
     prev: [[-1], [0, 4], [0, 4], [0, 4], [1, 2, 3], [1, 2, 3], [5], [6], [7], [8]],
     run: queryProcessing,
     insertInformation: function (word) {
@@ -100,7 +100,7 @@ const commands = [
         /^контакты,$/,
         /^где$/,
         /^есть$/,
-        /^[A-Za-zА-Яа-я0-9_.@ ]*$/],
+        /^[A-Za-zА-Яа-я0-9_.@, ]*$/],
     prev: [[-1], [0], [1], [2], [3]],
     run: deleteContactWithQuery,
     insertInformation: function (word) {
@@ -317,39 +317,8 @@ function splitCommand(command) {
         .concat(query);
 }
 
-function containStartWord(word, line, column) {
-    let startCommand = ['Создай', 'Удали', 'Добавь', 'Покажи'];
-    let find = false;
-    for (let start of startCommand) {
-        if (word.includes(start) && word.indexOf(';') + 1 === word.indexOf(start)) {
-            find = true;
-            column.index = word.length - word.indexOf(';');
-            line.index += 1;
-            break;
-        }
-        if (word.includes(start)) {
-            column.index += word.indexOf(start);
-            syntaxError(line.index, column.index + 1);
-        }
-    }
-
-    return find;
-}
-
-function checkStartWord(query) {
-    let words = query.split(' ');
-    let line = { index: 0 };
-    let column = { index: 0 };
-    for (let word of words) {
-        if (! containStartWord(word, line, column)) {
-            column.index += word.length + 1;
-        }
-    }
-}
-
 function run(query) {
     let answers = [];
-    checkStartWord(query);
     let queries = query.split(';');
     checkEndCommands(queries);
     for (let i = 0; i < queries.length - 1; i++) {
