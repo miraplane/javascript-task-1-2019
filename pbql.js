@@ -240,7 +240,7 @@ function indexesOfArray(array, element) {
 
 function checkEndCommands(queries) {
     if (queries[queries.length - 1] !== '') {
-        syntaxError(queries.length, queries[queries.length - 1].length + 1);
+        return { line: queries.length, column: queries[queries.length - 1].length + 1 };
     }
 }
 
@@ -309,42 +309,30 @@ function splitCommand(command) {
 
 
     let query = (command.slice(index));
-    command = command.slice(0, index - 1).split(' ');
+    command = command.slice(0, index - 1);
 
-    return command.concat(query);
-}
-
-function checkMail(word) {
-    let indexes = indexesOfArray(word, 'почту');
-
-    for (let i of indexes) {
-        if (word[i + 2] !== 'для' || word[i + 2] !== 'и') {
-            return i + 1;
-        }
-    }
-
-    return 0;
+    return command.split(' ')
+        .concat(query);
 }
 
 function run(query) {
     let answers = [];
     let queries = query.split(';');
-    checkEndCommands(queries);
-    for (let i = 0; i < queries.length - 1; i++) {
+    let exception = checkEndCommands(queries);
+    let length = exception ? queries.length : queries.length - 1;
+    for (let i = 0; i < length; i++) {
         let word = splitCommand(queries[i]);
 
-        let ex = checkMail(word);
         let define = defineCommand(word);
         if (define.command) {
             runCommand(define.command, word, answers);
         }
-        if (ex !== 0) {
-            ex = word.slice(0, ex).reduce((a, b) => a + b.length, 0) + ex + 1;
-            define.exception = Math.min(define.exception, ex);
-        }
         if (define.exception !== 0) {
             syntaxError(i + 1, define.exception);
         }
+    }
+    if (exception) {
+        syntaxError(exception.line, exception.column);
     }
 
     return answers;
