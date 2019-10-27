@@ -309,10 +309,21 @@ function splitCommand(command) {
 
 
     let query = (command.slice(index));
-    command = command.slice(0, index - 1);
+    command = command.slice(0, index - 1).split(' ');
 
-    return command.split(' ')
-        .concat(query);
+    return command.concat(query);
+}
+
+function checkMail(word) {
+    let indexes = indexesOfArray(word, 'почту');
+
+    for (let i of indexes) {
+        if (word[i + 2] !== 'для' || word[i + 2] !== 'и') {
+            return i + 1;
+        }
+    }
+
+    return 0;
 }
 
 function run(query) {
@@ -322,9 +333,14 @@ function run(query) {
     for (let i = 0; i < queries.length - 1; i++) {
         let word = splitCommand(queries[i]);
 
+        let ex = checkMail(word);
         let define = defineCommand(word);
         if (define.command) {
             runCommand(define.command, word, answers);
+        }
+        if (ex !== 0) {
+            ex = word.slice(0, ex).reduce((a, b) => a + b.length, 0) + ex + 1;
+            define.exception = Math.min(define.exception, ex);
         }
         if (define.exception !== 0) {
             syntaxError(i + 1, define.exception);
