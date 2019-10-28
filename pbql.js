@@ -30,7 +30,7 @@ const phoneBook = new Map();
 const commands = [
     { word: [/^Создай$/,
         /^контакт$/,
-        /^[^;]+$/],
+        /^[^;]*$/],
     prev: [[-1], [0], [1]],
     run: createContact,
     insertInformation: function (word) {
@@ -39,7 +39,7 @@ const commands = [
 
     { word: [/^Удали$/,
         /^контакт$/,
-        /^[^;]+$/],
+        /^[^;]*$/],
     prev: [[-1], [0], [1]],
     run: deleteContact,
     insertInformation: function (word) {
@@ -53,7 +53,7 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[^;]+$/],
+        /^[^;]*$/],
     prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [0, 2, 7], [5], [4, 6]],
     run: addInformationToContact,
     insertInformation: function (word) {
@@ -69,7 +69,7 @@ const commands = [
         /^почту$/,
         /^для$/,
         /^контакта$/,
-        /^[^;]+$/],
+        /^[^;]*$/],
     prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [0, 2, 7], [5], [4, 6]],
     run: deleteInformationFromContact,
     insertInformation: function (word) {
@@ -111,7 +111,7 @@ function syntaxError(lineNumber, charNumber) {
 
 function createContact(query, inf) {
     let name = inf.name;
-    if (phoneBook.has(name)) {
+    if (phoneBook.has(name) || inf.name === '') {
         return;
     }
 
@@ -177,7 +177,7 @@ function addUnique(array, elements) {
 }
 
 function addInformationToContact(query, inf) {
-    if (!phoneBook.has(inf.name)) {
+    if (!phoneBook.has(inf.name) || inf.name === '') {
         return;
     }
 
@@ -196,7 +196,7 @@ function deleteElements(array, elements) {
 }
 
 function deleteInformationFromContact(query, inf) {
-    if (!phoneBook.has(inf.name)) {
+    if (!phoneBook.has(inf.name) || inf.name === '') {
         return;
     }
     let contact = phoneBook.get(inf.name);
