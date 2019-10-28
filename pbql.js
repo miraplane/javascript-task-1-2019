@@ -54,7 +54,7 @@ const commands = [
         /^для$/,
         /^контакта$/,
         /^[^;]+$/],
-    prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [2, 7], [5], [4, 6]],
+    prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [0, 2, 7], [5], [4, 6]],
     run: addInformationToContact,
     insertInformation: function (word) {
         return { name: extractData(word, 'контакта').join(''),
@@ -70,7 +70,7 @@ const commands = [
         /^для$/,
         /^контакта$/,
         /^[^;]+$/],
-    prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [2, 7], [5], [4, 6]],
+    prev: [[-1], [0, 3], [1], [2, 7], [0, 3], [0, 2, 7], [5], [4, 6]],
     run: deleteInformationFromContact,
     insertInformation: function (word) {
         return { name: extractData(word, 'контакта').join(''),
@@ -88,7 +88,7 @@ const commands = [
         /^где$/,
         /^есть$/,
         /^[^;]*$/],
-    prev: [[-1], [0, 4], [0, 4], [0, 4], [1, 2, 3], [1, 2, 3], [5], [6], [7], [8]],
+    prev: [[-1], [0, 4], [0, 4], [0, 4], [1, 2, 3], [0, 1, 2, 3], [5], [6], [7], [8]],
     run: queryProcessing,
     insertInformation: function (word) {
         return { query: extractData(word, 'есть').join('') };
@@ -315,15 +315,6 @@ function splitCommand(command) {
         .concat(query);
 }
 
-function checkComma(query, define) {
-    if (define.exception - 1 === query.indexOf('контактов ')) {
-        define.exception += 'контактов'.length;
-    }
-    if (define.exception - 1 === query.indexOf('контакты ')) {
-        define.exception += 'контакты'.length;
-    }
-}
-
 function run(query) {
     let answers = [];
     let queries = query.split(';');
@@ -337,7 +328,6 @@ function run(query) {
             runCommand(define.command, word, answers);
         }
         if (define.exception !== 0) {
-            checkComma(queries[i], define);
             syntaxError(i + 1, define.exception);
         }
     }
