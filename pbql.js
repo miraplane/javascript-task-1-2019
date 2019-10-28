@@ -260,7 +260,10 @@ function queryProcessing(query, inf) {
     let answer = [];
 
     for (let contact of contacts) {
-        answer.push(contact.toString(fields));
+        let ans = contact.toString(fields);
+        if (ans !== '') {
+            answer.push(ans);
+        }
     }
 
     return answer;
